@@ -4,7 +4,6 @@ import { loadIcons, createThumbnail, setThumbnail } from './icons.js';
 import { Presentation, filterInventory } from './presentation.js';
 import { VirtualGrid } from './grid.js';
 import { CreationPreferences } from './creation-draft.js';
-import { parseItemsGame } from './items-game.js';
 
 const $ = id => document.getElementById(id);
 let catalog = null, icons = null, iconsLoading = false, loading = false;
@@ -220,34 +219,6 @@ for (const tab of ['inventory', 'catalog']) {
   });
 }
 const connection = new InventoryConnection(renderInventory);
-// Optional upload: without a file the catalogue is unfiltered.
-async function applySchema(file) {
-  $('schema-status').textContent = `Reading ${file.name}...`;
-  try {
-    const schema = parseItemsGame(await file.text());
-    catalog.setSchema(schema);
-    $('schema-status').textContent = `Filtering to ${file.name}: ${schema.items.size.toLocaleString()} items.`;
-    $('schema-clear').hidden = false;
-    renderCatalog(true);
-    rebuildInventory();
-  } catch (error) {
-    $('schema-status').textContent = `items_game.txt rejected: ${error.message}`;
-  }
-}
-$('schema-file').addEventListener('change', async () => {
-  const file = $('schema-file').files[0];
-  if (!file) return;
-  if (!catalog) { $('schema-status').textContent = 'Catalogue is still loading; choose the file again shortly.'; return; }
-  await applySchema(file);
-});
-$('schema-clear').addEventListener('click', () => {
-  catalog?.setSchema(null);
-  $('schema-file').value = '';
-  $('schema-clear').hidden = true;
-  $('schema-status').textContent = 'Showing all items.';
-  renderCatalog(true);
-  rebuildInventory();
-});
 $('connect').addEventListener('click', () => connection.connect());
 $('disconnect').addEventListener('click', () => connection.disconnect());
 window.addEventListener('pagehide', () => connection.disconnect());

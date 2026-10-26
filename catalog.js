@@ -27,22 +27,9 @@ export class Catalog {
     for (const record of data.attributes) this.attributes.set(record.id, record);
   }
 
-  // Limits results to records present in a user-supplied items_game.txt.
-  setSchema(schema) { this.schema = schema; }
-
-  inSchema(record) {
-    const schema = this.schema;
-    if (!schema) return true;
-    if (!schema.items.has(record.defIndex)) return false;
-    if (record.kind === 'paint' && schema.paintKits.size) return schema.paintKits.has(record.kitId);
-    if ((record.kind === 'sticker' || record.kind === 'graffiti') && schema.stickerKits.size) return schema.stickerKits.has(record.kitId);
-    return true;
-  }
-
   search({ view = 'definitions', category = '', query = '', allDefinitions = false } = {}) {
     const tokens = normalizeSearch(query).split(' ').filter(Boolean);
     return this.data[view].filter(record =>
-      this.inSchema(record) &&
       (view !== 'definitions' || allDefinitions || !record.advancedOnly) &&
       (!category || record.category === category) &&
       tokens.every(token => this.searchTexts.get(record.key).includes(token)));
