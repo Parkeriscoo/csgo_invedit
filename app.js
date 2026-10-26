@@ -220,13 +220,14 @@ for (const tab of ['inventory', 'catalog']) {
   });
 }
 const connection = new InventoryConnection(renderInventory);
-// Connect first asks for items_game.txt (once) so the catalogue matches the game version.
+// Optional upload: without a file the catalogue is unfiltered.
 async function applySchema(file) {
   $('schema-status').textContent = `Reading ${file.name}...`;
   try {
     const schema = parseItemsGame(await file.text());
     catalog.setSchema(schema);
-    $('schema-status').textContent = `Schema: ${schema.items.size.toLocaleString()} items`;
+    $('schema-status').textContent = `Filtering to ${file.name}: ${schema.items.size.toLocaleString()} items.`;
+    $('schema-clear').hidden = false;
     renderCatalog(true);
     rebuildInventory();
   } catch (error) {
@@ -235,14 +236,19 @@ async function applySchema(file) {
 }
 $('schema-file').addEventListener('change', async () => {
   const file = $('schema-file').files[0];
-  if (file && catalog) await applySchema(file);
-  connection.connect();
+  if (!file) return;
+  if (!catalog) { $('schema-status').textContent = 'Catalogue is still loading; choose the file again shortly.'; return; }
+  await applySchema(file);
 });
-$('schema-file').addEventListener('cancel', () => connection.connect());
-$('connect').addEventListener('click', () => {
-  if (catalog && !catalog.schema) { $('schema-file').value = ''; $('schema-file').click(); }
-  else connection.connect();
+$('schema-clear').addEventListener('click', () => {
+  catalog?.setSchema(null);
+  $('schema-file').value = '';
+  $('schema-clear').hidden = true;
+  $('schema-status').textContent = 'Showing all items.';
+  renderCatalog(true);
+  rebuildInventory();
 });
+$('connect').addEventListener('click', () => connection.connect());
 $('disconnect').addEventListener('click', () => connection.disconnect());
 window.addEventListener('pagehide', () => connection.disconnect());
 for (const id of ['catalog-view', 'catalog-category', 'catalog-all', 'catalog-search']) $(id).addEventListener(id === 'catalog-search' ? 'input' : 'change', () => renderCatalog(true));

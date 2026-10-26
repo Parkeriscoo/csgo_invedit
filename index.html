@@ -12,13 +12,16 @@
 <div><h1>Inventory editor</h1></div>
 <div class="toolbar">
 <span id="status" role="status" aria-live="polite">Disconnected</span>
-<span id="schema-status" role="status"></span>
-<input id="schema-file" type="file" accept=".txt" hidden>
 <button id="connect">Connect</button>
 <button id="disconnect" disabled>Disconnect</button>
 </div>
 </header>
 <p id="message" role="alert"></p>
+<div class="schema-upload">
+<label>Optional: upload your items_game.txt to show only items in your game version <input id="schema-file" type="file" accept=".txt"></label>
+<button id="schema-clear" hidden>Show all items</button>
+<span id="schema-status" role="status" aria-live="polite">Showing all items.</span>
+</div>
 <div class="loading-feedback" aria-label="Loading status">
 <span id="catalog-status" role="status" aria-live="polite">Loading catalogue...</span>
 <button id="catalog-retry" hidden>Retry catalogue loading</button>
