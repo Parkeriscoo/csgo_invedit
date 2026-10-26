@@ -4,6 +4,7 @@ import { loadIcons, createThumbnail, setThumbnail } from './icons.js';
 import { Presentation, filterInventory } from './presentation.js';
 import { VirtualGrid } from './grid.js';
 import { CreationPreferences } from './creation-draft.js';
+import { parseItemsGame } from './items-game.js';
 
 const $ = id => document.getElementById(id);
 let catalog = null, icons = null, iconsLoading = false, loading = false;
@@ -219,7 +220,29 @@ for (const tab of ['inventory', 'catalog']) {
   });
 }
 const connection = new InventoryConnection(renderInventory);
-$('connect').addEventListener('click', () => connection.connect());
+// Connect first asks for items_game.txt (once) so the catalogue matches the game version.
+async function applySchema(file) {
+  $('schema-status').textContent = `Reading ${file.name}...`;
+  try {
+    const schema = parseItemsGame(await file.text());
+    catalog.setSchema(schema);
+    $('schema-status').textContent = `Schema: ${schema.items.size.toLocaleString()} items`;
+    renderCatalog(true);
+    rebuildInventory();
+  } catch (error) {
+    $('schema-status').textContent = `items_game.txt rejected: ${error.message}`;
+  }
+}
+$('schema-file').addEventListener('change', async () => {
+  const file = $('schema-file').files[0];
+  if (file && catalog) await applySchema(file);
+  connection.connect();
+});
+$('schema-file').addEventListener('cancel', () => connection.connect());
+$('connect').addEventListener('click', () => {
+  if (catalog && !catalog.schema) { $('schema-file').value = ''; $('schema-file').click(); }
+  else connection.connect();
+});
 $('disconnect').addEventListener('click', () => connection.disconnect());
 window.addEventListener('pagehide', () => connection.disconnect());
 for (const id of ['catalog-view', 'catalog-category', 'catalog-all', 'catalog-search']) $(id).addEventListener(id === 'catalog-search' ? 'input' : 'change', () => renderCatalog(true));
